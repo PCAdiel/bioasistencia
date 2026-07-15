@@ -1,0 +1,3 @@
+globalThis.NG_APP_SUPABASE_URL = 'https://rufaupwdvoqpnoeacbnx.supabase.co';
+globalThis.NG_APP_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1ZmF1cHdkdm9xcG5vZWFjYm54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NDI3ODIsImV4cCI6MjA5NjAxODc4Mn0.2DNPhzMFiAj_gecMwbfvYGerwQv0t2fjXsicbQ0DPj0';
+globalThis.NG_APP_FACE_MATCH_THRESHOLD = '0.58';

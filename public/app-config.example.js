@@ -1,0 +1,3 @@
+globalThis.NG_APP_SUPABASE_URL = '';
+globalThis.NG_APP_SUPABASE_ANON_KEY = '';
+globalThis.NG_APP_FACE_MATCH_THRESHOLD = '0.58';

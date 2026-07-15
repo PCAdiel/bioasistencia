@@ -1,119 +1,53 @@
-# Asistencia Biométrica — Vercel + Supabase
+# Asistencia Biométrica — Angular + Supabase
 
-Migración del prototipo académico original (PHP + MariaDB + Flask/DeepFace en XAMPP) a una aplicación web desplegable en Vercel con Next.js, Supabase PostgreSQL y reconocimiento facial ejecutado en el navegador.
+Aplicación académica de asistencia: los usuarios ingresan con correo/contraseña y la biometría identifica únicamente a alumnos. Las imágenes se procesan en el navegador y nunca se almacenan; la plantilla facial se cifra y se compara sólo en Edge Functions.
 
-> **Alcance:** proyecto académico/demostrativo. La prueba de vida implementada es básica y no equivale a un sistema biométrico certificado. Antes de usar datos reales se debe realizar una evaluación legal, de privacidad, seguridad y exactitud.
+## Requisitos e instalación
 
-## Qué incluye
+Instale Node.js 22+, Angular CLI y la [CLI de Supabase](https://supabase.com/docs/guides/cli). Ejecute `npm install`, copie `.env.example` a su configuración de despliegue y complete `public/app-config.js` con la URL y clave **anon** de su proyecto. No coloque claves de servicio allí.
 
-- Inicio de sesión con sesión segura en cookie `httpOnly`.
-- Roles `admin` y `docente`.
-- Alta, edición, activación e inactivación de alumnos.
-- Consentimiento explícito antes del enrolamiento biométrico.
-- Captura facial en el navegador con tres muestras y comprobación básica de parpadeo.
-- Plantillas biométricas de 128 dimensiones cifradas con AES-256-GCM.
-- Registro de entrada y salida, evitando duplicados por alumno, fecha y curso.
-- Gestión de cursos.
-- Reportes filtrables y exportación CSV.
-- Bitácora de auditoría.
-- Validación de entradas, comprobación de origen, límites básicos de solicitudes y cabeceras de seguridad.
+```bash
+npm start
+supabase link --project-ref SU_REF
+supabase db push
+supabase secrets set BIOMETRIC_ENCRYPTION_KEY="BASE64_DE_32_BYTES" FACE_MATCH_THRESHOLD=0.58
+supabase functions deploy setup-admin
+supabase functions deploy enroll-biometric
+supabase functions deploy recognize-attendance
+```
 
-## Arquitectura
+En producción configure las mismas variables públicas mediante el mecanismo de su hosting, generando `app-config.js` antes de publicar. La anon key es pública por diseño; RLS la limita.
 
-~~~text
-Navegador
-  ├─ Cámara + face-api (la imagen no se guarda)
-  └─ Interfaz Next.js
-            │ HTTPS
-            ▼
-Vercel / Next.js Serverless Functions
-  ├─ autenticación y autorización
-  ├─ reglas de asistencia
-  ├─ cifrado AES-GCM
-  └─ auditoría
-            │ TLS
-            ▼
-Supabase PostgreSQL
-~~~
+## Primer uso
 
-La aplicación ya no requiere XAMPP, Apache, PHP, MariaDB local ni un servicio Flask. Vercel aloja el frontend y las funciones; Supabase conserva los datos porque el sistema de archivos de Vercel no es una base de datos persistente.
-
-Supabase se usa únicamente como PostgreSQL administrado. El navegador no utiliza la Data API, la clave `anon` ni `service_role`; todo acceso pasa por el backend autenticado de Next.js. Las tablas tienen RLS habilitado y no poseen políticas públicas.
-
-## Requisitos
-
-- Node.js 20 o superior.
-- Un proyecto de Supabase y su cadena **Transaction pooler**, adecuada para funciones serverless.
-- Navegador moderno con cámara y HTTPS. `localhost` también permite cámara durante el desarrollo.
-
-## Configuración local
-
-1. Instale dependencias:
-
-   ~~~bash
-   npm ci
-   ~~~
-
-2. Copie `.env.example` como `.env.local` y complete las variables.
-
-3. Genere secretos independientes. Los siguientes comandos producen ejemplos válidos:
-
-   ~~~bash
-   openssl rand -base64 32
-   openssl rand -base64 32
-   ~~~
-
-   Use el primer valor como `JWT_SECRET` y el segundo como `BIOMETRIC_ENCRYPTION_KEY`. No publique estos valores ni los reutilice.
-
-4. Ejecute `database/migration.sql` en su base PostgreSQL.
-
-5. Inicie la aplicación:
-
-   ~~~bash
-   npm run dev
-   ~~~
-
-6. Abra `http://localhost:3000/setup` y cree el primer administrador. La ruta queda bloqueada después de crearlo.
-
-## Despliegue en Vercel
-
-La guía completa está en [docs/DESPLIEGUE_VERCEL.md](docs/DESPLIEGUE_VERCEL.md). Resumen:
-
-1. Suba esta carpeta a un repositorio privado de GitHub.
-2. Cree un proyecto de Supabase y ejecute `database/migration.sql` desde SQL Editor.
-3. Importe el repositorio desde Vercel.
-4. Configure `DATABASE_URL`, `JWT_SECRET`, `BIOMETRIC_ENCRYPTION_KEY`, `FACE_MATCH_THRESHOLD` y `NEXT_PUBLIC_APP_NAME`.
-5. Despliegue y visite `/setup` una sola vez.
-
-No se incluye la base original ni datos personales/biométricos en este paquete. Se recomienda mantener el repositorio privado mientras el sistema gestione datos reales.
-
-## Calidad y verificación
-
-~~~bash
-npm run check
-~~~
-
-El comando ejecuta lint, comprobación de TypeScript, pruebas unitarias y compilación de producción. Consulte [docs/PRUEBAS_Y_LIMITACIONES.md](docs/PRUEBAS_Y_LIMITACIONES.md) para el alcance y las pruebas manuales pendientes de realizar con cámara y base configurada.
-
-## Estructura principal
-
-~~~text
-database/migration.sql         esquema PostgreSQL y protección RLS
-database/verify_supabase.sql   comprobaciones de solo lectura
-public/models/                 modelos locales para reconocimiento facial
-src/app/                       páginas y API de Next.js
-src/components/                formularios, navegación y captura facial
-src/lib/                       autenticación, cifrado, BD y validaciones
-docs/                          despliegue, seguridad y pruebas
-~~~
+1. Abra `/setup` y cree el primer administrador (contraseña de 10+ caracteres). La función bloquea solicitudes posteriores.
+2. Inicie sesión en `/login`.
+3. Cree un alumno en **Alumnos**, active la cámara, parpadee y capture 1–3 muestras. El descriptor promedio se cifra en la función.
+4. En **Asistencia**, active cámara, parpadee y capture. La primera marcación es entrada; la segunda, tras 5 minutos, es salida.
 
 ## Seguridad y privacidad
 
-- Las imágenes de cámara se procesan en memoria en el navegador y no se envían ni almacenan.
-- La plantilla matemática sí se envía al servidor y se almacena cifrada; sigue siendo un dato biométrico sensible.
-- El consentimiento debe ser informado, demostrable, revocable y adecuado a la finalidad.
-- Al retirar el consentimiento, un administrador puede eliminar la plantilla biométrica desde la ficha del alumno.
-- Cambiar `BIOMETRIC_ENCRYPTION_KEY` sin una migración controlada hace ilegibles las plantillas existentes.
-- El umbral de coincidencia debe calibrarse con pruebas representativas y autorización institucional; `0.58` es solo un punto de partida técnico.
+Las migraciones están en `supabase/migrations/`; incluyen índices, restricciones y RLS. `biometric_templates` no tiene políticas de lectura/escritura para el navegador. Configure `BIOMETRIC_ENCRYPTION_KEY` y `SUPABASE_SERVICE_ROLE_KEY` exclusivamente como secretos de Edge Functions (el segundo ya existe en Supabase). Calibre el umbral con consentimiento institucional: 0.58 es sólo inicial. Esta prueba de vida por parpadeo es demostrativa, no certificada.
 
-Más detalles en [docs/SEGURIDAD_Y_PRIVACIDAD.md](docs/SEGURIDAD_Y_PRIVACIDAD.md).
+## Problemas comunes
+
+- **Cámara bloqueada:** use HTTPS o `localhost`, permita cámara y asegure una sola cara iluminada.
+- **No configurado:** revise que `public/app-config.js` contenga URL y anon key válidas.
+- **Rostro no reconocido:** vuelva a enrolar con buena iluminación o ajuste el secreto `FACE_MATCH_THRESHOLD` con pruebas autorizadas.
+- **Error de función:** confirme que aplicó migraciones, desplegó las tres funciones y configuró el secreto de cifrado.
+
+## Despliegue en Vercel
+
+1. Suba el repositorio a GitHub. `app-config.js` puede contener la URL y clave pública de Supabase, pero nunca claves de servicio ni cifrado.
+2. Importe el repositorio en Vercel. La configuración `vercel.json` ya indica el directorio de salida y permite abrir directamente rutas como `/asistencia`.
+3. En **Settings → Environment Variables** agregue estas variables para Production, Preview y Development:
+
+```text
+NG_APP_SUPABASE_URL=https://TU_PROJECT_REF.supabase.co
+NG_APP_SUPABASE_ANON_KEY=TU_PUBLISHABLE_O_ANON_KEY
+NG_APP_FACE_MATCH_THRESHOLD=0.58
+```
+
+4. Despliegue. Si no configura variables, Vercel usará el `app-config.js` público versionado; las variables de Vercel, si existen, tienen prioridad.
+
+Validación: `npm run build` y `npx ng lint`.
