@@ -6,7 +6,9 @@ Aplicación académica de asistencia: los usuarios ingresan con correo/contrase�
 
 La carpeta `demo/` ofrece una vista interactiva con alumnos ficticios. Permite simular una marcación de asistencia, pero no usa la cámara, no procesa datos biométricos ni se conecta a Supabase. Es una presentación segura de la idea y no reproduce la verificación biométrica real.
 
-Para publicar esta demostración en Vercel, importa el repositorio y selecciona `demo` como **Root Directory**. La aplicación completa permanece en la raíz y requiere su propio entorno Supabase y sus funciones de servidor.
+**Demo interactiva:** https://bioasistencia-demo.vercel.app/
+
+La demostración estática vive en `demo/` y tiene su configuración de Vercel. La aplicación completa permanece en la raíz y requiere su propio entorno Supabase y sus funciones de servidor.
 
 ## Requisitos e instalación
 
