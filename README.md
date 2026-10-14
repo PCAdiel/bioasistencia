@@ -2,12 +2,6 @@
 
 Aplicación académica de asistencia: los usuarios ingresan con correo/contraseña y la biometría identifica únicamente a alumnos. Las imágenes se procesan en el navegador y nunca se almacenan; la plantilla facial se cifra y se compara sólo en Edge Functions.
 
-## Demo de portafolio
-
-La carpeta `demo/` ofrece una vista interactiva con alumnos ficticios. Permite simular una marcación de asistencia, pero no usa la cámara, no procesa datos biométricos ni se conecta a Supabase. Es una presentación segura de la idea y no reproduce la verificación biométrica real.
-
-Para publicar esta demostración en Vercel, importa el repositorio y selecciona `demo` como **Root Directory**. La aplicación completa permanece en la raíz y requiere su propio entorno Supabase y sus funciones de servidor.
-
 ## Requisitos e instalación
 
 Instale Node.js 22+, Angular CLI y la [CLI de Supabase](https://supabase.com/docs/guides/cli). Ejecute `npm install`, copie `.env.example` a su configuración de despliegue y complete `public/app-config.js` con la URL y clave **anon** de su proyecto. No coloque claves de servicio allí.
